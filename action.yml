@@ -1,0 +1,19 @@
+name: "Get Anaconda package version"
+description: "Get the latest version of a package from Anaconda"
+author: "Jacob Tomlinson"
+branding:
+  icon: tag
+  color: purple
+inputs:
+  org:
+    description: The Anaconda Cloud org
+    required: true
+  package:
+    description: The Python package name
+    required: true
+outputs:
+  version:
+    description: The latest version
+runs:
+  using: "docker"
+  image: "Dockerfile"
