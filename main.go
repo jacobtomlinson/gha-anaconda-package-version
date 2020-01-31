@@ -55,7 +55,7 @@ func main() {
 	for _, tag := range pkg {
 		matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 		if matched {
-			tags = append(tags, &semver.New(tag.Version))
+			tags = append(tags, *semver.New(tag.Version))
 		}
 	}
 
