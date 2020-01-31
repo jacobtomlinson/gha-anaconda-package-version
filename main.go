@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"sort"
 	"time"
+
+	"github.com/coreos/go-semver/semver"
 )
 
 type PkgFile struct {
@@ -50,11 +51,11 @@ func main() {
 		log.Fatal(unmarshalErr)
 	}
 
-	var tags []string
+	var tags []*semver.Version
 	for _, tag := range pkg {
 		matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 		if matched {
-			tags = append(tags, tag.Version)
+			tags = append(tags, semver.New(tag.Version))
 		}
 	}
 
@@ -62,6 +63,6 @@ func main() {
 		log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 	}
 
-	sort.Strings(tags)
+	semver.Sort(tags)
 	fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, tags[len(tags)-1]))
 }
