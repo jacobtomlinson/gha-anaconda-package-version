@@ -51,7 +51,7 @@ func main() {
 		log.Fatal(unmarshalErr)
 	}
 
-	var tags []string
+	var tags []semver.Version
 	for _, tag := range pkg {
 		matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 		if matched {
