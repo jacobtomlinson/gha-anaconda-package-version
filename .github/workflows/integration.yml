@@ -16,3 +16,15 @@ jobs:
       - name: Check outputs
         run: |
           echo "${{ steps.selftest.outputs.version }}"
+
+      - name: Self test
+        id: selftest
+        uses: jacobtomlinson/gha-anaconda-package-version@master
+        with:
+          org: conda-forge
+          package: pangeo-notebook
+          version_system: CalVer
+
+      - name: Check outputs
+        run: |
+          echo "${{ steps.selftest.outputs.version }}"
