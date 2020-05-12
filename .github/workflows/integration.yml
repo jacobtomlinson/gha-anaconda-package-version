@@ -1,5 +1,5 @@
 name: Integration Test
-on: [push]
+on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -7,12 +7,24 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Self test
-        id: selftest
-        uses: jacobtomlinson/gha-anaconda-package-version@master
+        id: selftest-semver
+        uses: ./
         with:
           org: anaconda
           package: python
 
       - name: Check outputs
         run: |
-          echo "${{ steps.selftest.outputs.version }}"
+          echo "${{ steps.selftest-semver.outputs.version }}"
+
+      - name: Self test
+        id: selftest-calver
+        uses: ./
+        with:
+          org: conda-forge
+          package: pangeo-notebook
+          version_system: CalVer
+
+      - name: Check outputs
+        run: |
+          echo "${{ steps.selftest-calver.outputs.version }}"

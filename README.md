@@ -23,20 +23,22 @@ jobs:
       with:
         org: anaconda
         package: python
+        version_system: SemVer
 ```
 
 ### Inputs
 
-| Input                                             | Description                                        |
-|------------------------------------------------------|-----------------------------------------------|
-| `org`  | The Anaconda user or organization    |
-| `package` | The name of the Python package    |
+| Input            | Description                                                      |
+|------------------|------------------------------------------------------------------|
+| `org`            | The Anaconda user or organization                                |
+| `package`        | The name of the Python package                                   |
+| `version_system` | The name of the version system: `SemVer` (default) or  `CalVer`. |
 
 ### Outputs
 
-| Output                                             | Description                                        |
-|------------------------------------------------------|-----------------------------------------------|
-| `version`  | The version of the package    |
+| Output           | Description                                                      |
+|------------------|------------------------------------------------------------------|
+| `version`        | The version of the package                                       |
 
 ## Examples
 
@@ -57,6 +59,7 @@ jobs:
       with:
         org: anaconda
         package: python
+        version_system: SemVer
 
     - name: Check outputs
         run: |
