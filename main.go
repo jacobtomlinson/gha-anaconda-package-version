@@ -68,10 +68,10 @@ func main() {
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			
-			version, err := semver.NewVersion(matched)
-			if err == nil {
+			version, semverErr := semver.NewVersion(matched)
+			if semverErr == nil {
 				semtags = append(semtags, version)
-			} else {fmt.Println("incompatible semver found:", matched, err)}
+			} else {fmt.Println("incompatible semver found:", matched, semverErr)}
 		}
 		semver.Sort(semtags)
 
