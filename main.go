@@ -59,7 +59,7 @@ func main() {
 
 	pkg := make([]PkgFile, 0)
 	unmarshalErr := json.Unmarshal(body, &pkg)
-	fmt.Println(fmt.Sprintf(`body:: %s`, body))
+	//fmt.Println(fmt.Sprintf(`body:: %s`, body))
 	if unmarshalErr != nil {
 		log.Fatal(unmarshalErr)
 	}
