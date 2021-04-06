@@ -59,7 +59,7 @@ func main() {
 
 	pkg := make([]PkgFile, 0)
 	unmarshalErr := json.Unmarshal(body, &pkg)
-	fmt.Println(fmt.Sprintf(`body:: %s`, body))
+	//fmt.Println(fmt.Sprintf(`body:: %s`, body))
 	if unmarshalErr != nil {
 		log.Fatal(unmarshalErr)
 	}
@@ -68,7 +68,10 @@ func main() {
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			if matched {
-				semtags = append(semtags, semver.New(tag.Version))
+				version, semverErr := semver.NewVersion(tag.Version)
+				if semverErr == nil {
+					semtags = append(semtags, version)
+				} else {fmt.Println("incompatible semver found:", tag.Version, semverErr)}
 			}
 		}
 		semver.Sort(semtags)
