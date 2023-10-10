@@ -37,7 +37,7 @@ func main() {
 	url := fmt.Sprintf(`https://api.anaconda.org/package/%s/%s/files`, orgName, pkgName)
 
 	dhClient := http.Client{
-		Timeout: time.Second * 2, // Maximum of 2 secs
+		Timeout: time.Second * 4, // Maximum of 4 secs
 	}
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
