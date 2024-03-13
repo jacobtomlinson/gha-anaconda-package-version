@@ -25,6 +25,23 @@ func getEnvDefault(key, default_value string) string {
     return default_value
 }
 
+func setOutput(key string, value string) {
+	path = os.LookupEnv("GITHUB_OUTPUT")
+
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	n, err := f.WriteString(fmt.Sprintf(`%s=%s\n`, key, value))
+	if err != nil {
+		log.Fatal(err)
+	}
+	f.Sync()
+}
+
+
 func main() {
 
 	var semtags []*semver.Version
@@ -80,7 +97,7 @@ func main() {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
 
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, semtags[len(semtags)-1]))
+		setOutput("version", semtags[len(semtags)-1])
 
 	} else {  // CalVer
 		for _, tag := range pkg {
@@ -95,7 +112,7 @@ func main() {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
 
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, caltags[len(caltags)-1]))
+		setOutput("version", caltags[len(caltags)-1])
 
 	}
 }
