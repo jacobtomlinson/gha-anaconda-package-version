@@ -19,10 +19,10 @@ type PkgFile struct {
 }
 
 func getEnvDefault(key, default_value string) string {
-    if val, found := os.LookupEnv(key); found {
-        return val
-    }
-    return default_value
+	if val, found := os.LookupEnv(key); found {
+		return val
+	}
+	return default_value
 }
 
 func main() {
@@ -64,14 +64,16 @@ func main() {
 		log.Fatal(unmarshalErr)
 	}
 
-	if (verSys == "SemVer") {
+	if verSys == "SemVer" {
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			if matched {
 				version, semverErr := semver.NewVersion(tag.Version)
 				if semverErr == nil {
 					semtags = append(semtags, version)
-				} else {fmt.Println("incompatible semver found:", tag.Version, semverErr)}
+				} else {
+					fmt.Println("incompatible semver found:", tag.Version, semverErr)
+				}
 			}
 		}
 		semver.Sort(semtags)
@@ -79,10 +81,9 @@ func main() {
 		if len(semtags) == 0 {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
+		os.Setenv("GITHUB_OUTPUT", fmt.Sprintf(`version=%s`, semtags[len(semtags)-1]))
 
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, semtags[len(semtags)-1]))
-
-	} else {  // CalVer
+	} else { // CalVer
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			if matched {
@@ -95,7 +96,6 @@ func main() {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
 
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, caltags[len(caltags)-1]))
-
+		os.Setenv("GITHUB_OUTPUT", fmt.Sprintf(`version=%s`, caltags[len(caltags)-1]))
 	}
 }
