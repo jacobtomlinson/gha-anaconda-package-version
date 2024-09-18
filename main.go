@@ -19,10 +19,25 @@ type PkgFile struct {
 }
 
 func getEnvDefault(key, default_value string) string {
-    if val, found := os.LookupEnv(key); found {
-        return val
-    }
-    return default_value
+	if val, found := os.LookupEnv(key); found {
+		return val
+	}
+	return default_value
+}
+
+func writeOutput(key, value string) error {
+	output_filename := os.Getenv("GITHUB_OUTPUT")
+	f, err := os.OpenFile(output_filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(fmt.Sprintf(`%s=%s`, key, value)); err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
@@ -64,14 +79,16 @@ func main() {
 		log.Fatal(unmarshalErr)
 	}
 
-	if (verSys == "SemVer") {
+	if verSys == "SemVer" {
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			if matched {
 				version, semverErr := semver.NewVersion(tag.Version)
 				if semverErr == nil {
 					semtags = append(semtags, version)
-				} else {fmt.Println("incompatible semver found:", tag.Version, semverErr)}
+				} else {
+					fmt.Println("incompatible semver found:", tag.Version, semverErr)
+				}
 			}
 		}
 		semver.Sort(semtags)
@@ -79,10 +96,12 @@ func main() {
 		if len(semtags) == 0 {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
+		writeErr := writeOutput("version", fmt.Sprintf(`%s`, semtags[len(semtags)-1]))
+		if writeErr != nil {
+			log.Fatal(readErr)
+		}
 
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, semtags[len(semtags)-1]))
-
-	} else {  // CalVer
+	} else { // CalVer
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			if matched {
@@ -94,8 +113,9 @@ func main() {
 		if len(caltags) == 0 {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
-
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, caltags[len(caltags)-1]))
-
+		writeErr := writeOutput("version", fmt.Sprintf(`%s`, caltags[len(caltags)-1]))
+		if writeErr != nil {
+			log.Fatal(readErr)
+		}
 	}
 }
