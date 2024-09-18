@@ -26,6 +26,21 @@ func getEnvDefault(key, default_value string) string {
 	return default_value
 }
 
+func writeOutput(key, value string) error {
+	output_filename := os.Getenv("GITHUB_OUTPUT")
+	f, err := os.OpenFile(output_filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(fmt.Sprintf(`%s=%s`, key, value)); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 
 	var semtags []*semver.Version
@@ -34,7 +49,7 @@ func main() {
 	orgName := os.Getenv("INPUT_ORG")
 	pkgName := os.Getenv("INPUT_PACKAGE")
 	verSys := getEnvDefault("INPUT_VERSION_SYSTEM", "SemVer")
-	retries_remaining, err := strconv.Atoi(getEnvDefault("INPUT_RETRIES", "3"))
+	retries, err := strconv.Atoi(getEnvDefault("INPUT_RETRIES", "3"))
 
 	if err != nil {
 		log.Fatal(err)
@@ -52,9 +67,13 @@ func main() {
 	}
 
 	req.Header.Set("User-Agent", "gha-anaconda-package-version")
-	var res: http.Response
-	for i := range retries_remaining {
-		res, getErr := dhClient.Do(req)
+	var res *http.Response
+	getErr := error(nil)
+	for i := 1; i <= retries; i++ {
+		res, getErr = dhClient.Do(req)
+		if getErr == nil {
+			break
+		}
 	}
 	if getErr != nil {
 		log.Fatal(getErr)
@@ -89,8 +108,10 @@ func main() {
 		if len(semtags) == 0 {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
-
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, semtags[len(semtags)-1]))
+		writeErr := writeOutput("version", fmt.Sprintf(`%s`, semtags[len(semtags)-1]))
+		if writeErr != nil {
+			log.Fatal(readErr)
+		}
 
 	} else { // CalVer
 		for _, tag := range pkg {
@@ -104,8 +125,9 @@ func main() {
 		if len(caltags) == 0 {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
-
-		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, caltags[len(caltags)-1]))
-
+		writeErr := writeOutput("version", fmt.Sprintf(`%s`, caltags[len(caltags)-1]))
+		if writeErr != nil {
+			log.Fatal(readErr)
+		}
 	}
 }
