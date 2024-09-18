@@ -11,6 +11,10 @@ inputs:
   package:
     description: The Python package name
     required: true
+  version_system:
+    description: The versioning system to use
+    required: false
+    default: "SemVer"
 outputs:
   version:
     description: The latest version
