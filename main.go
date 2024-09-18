@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/coreos/go-semver/semver"
@@ -19,10 +20,10 @@ type PkgFile struct {
 }
 
 func getEnvDefault(key, default_value string) string {
-    if val, found := os.LookupEnv(key); found {
-        return val
-    }
-    return default_value
+	if val, found := os.LookupEnv(key); found {
+		return val
+	}
+	return default_value
 }
 
 func main() {
@@ -33,6 +34,11 @@ func main() {
 	orgName := os.Getenv("INPUT_ORG")
 	pkgName := os.Getenv("INPUT_PACKAGE")
 	verSys := getEnvDefault("INPUT_VERSION_SYSTEM", "SemVer")
+	retries_remaining, err := strconv.Atoi(getEnvDefault("INPUT_RETRIES", "3"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	url := fmt.Sprintf(`https://api.anaconda.org/package/%s/%s/files`, orgName, pkgName)
 
@@ -46,8 +52,10 @@ func main() {
 	}
 
 	req.Header.Set("User-Agent", "gha-anaconda-package-version")
-
-	res, getErr := dhClient.Do(req)
+	var res: http.Response
+	for i := range retries_remaining {
+		res, getErr := dhClient.Do(req)
+	}
 	if getErr != nil {
 		log.Fatal(getErr)
 	}
@@ -64,14 +72,16 @@ func main() {
 		log.Fatal(unmarshalErr)
 	}
 
-	if (verSys == "SemVer") {
+	if verSys == "SemVer" {
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			if matched {
 				version, semverErr := semver.NewVersion(tag.Version)
 				if semverErr == nil {
 					semtags = append(semtags, version)
-				} else {fmt.Println("incompatible semver found:", tag.Version, semverErr)}
+				} else {
+					fmt.Println("incompatible semver found:", tag.Version, semverErr)
+				}
 			}
 		}
 		semver.Sort(semtags)
@@ -82,7 +92,7 @@ func main() {
 
 		fmt.Println(fmt.Sprintf(`::set-output name=version::%s`, semtags[len(semtags)-1]))
 
-	} else {  // CalVer
+	} else { // CalVer
 		for _, tag := range pkg {
 			matched, _ := regexp.MatchString(`.*\..*\..*`, tag.Version)
 			if matched {
