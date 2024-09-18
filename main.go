@@ -25,6 +25,21 @@ func getEnvDefault(key, default_value string) string {
 	return default_value
 }
 
+func writeOutput(key, value string) error {
+	output_filename := os.Getenv("GITHUB_OUTPUT")
+	f, err := os.OpenFile(output_filename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(fmt.Sprintf(`%s=%s`, key, value)); err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 
 	var semtags []*semver.Version
@@ -81,7 +96,10 @@ func main() {
 		if len(semtags) == 0 {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
-		os.Setenv("GITHUB_OUTPUT", fmt.Sprintf(`version=%s`, semtags[len(semtags)-1]))
+		writeErr := writeOutput("version", fmt.Sprintf(`%s`, semtags[len(semtags)-1]))
+		if writeErr != nil {
+			log.Fatal(readErr)
+		}
 
 	} else { // CalVer
 		for _, tag := range pkg {
@@ -95,7 +113,9 @@ func main() {
 		if len(caltags) == 0 {
 			log.Fatal(fmt.Sprintf(`Unable to find files for %s/%s`, orgName, pkgName))
 		}
-
-		os.Setenv("GITHUB_OUTPUT", fmt.Sprintf(`version=%s`, caltags[len(caltags)-1]))
+		writeErr := writeOutput("version", fmt.Sprintf(`%s`, caltags[len(caltags)-1]))
+		if writeErr != nil {
+			log.Fatal(readErr)
+		}
 	}
 }
