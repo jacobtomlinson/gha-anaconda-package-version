@@ -16,6 +16,10 @@ jobs:
       - name: Check outputs
         run: |
           echo "${{ steps.selftest-semver.outputs.version }}"
+          if [ "${{ steps.selftest-semver.outputs.version }}" = "" ];then
+            echo "Version is empty"
+            exit 1
+          fi
 
       - name: Self test
         id: selftest-calver
@@ -28,3 +32,7 @@ jobs:
       - name: Check outputs
         run: |
           echo "${{ steps.selftest-calver.outputs.version }}"
+          if [ "${{ steps.selftest-calver.outputs.version }}" = "" ];then
+            echo "Version is empty"
+            exit 1
+          fi
