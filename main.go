@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/coreos/go-semver/semver"
@@ -48,6 +49,11 @@ func main() {
 	orgName := os.Getenv("INPUT_ORG")
 	pkgName := os.Getenv("INPUT_PACKAGE")
 	verSys := getEnvDefault("INPUT_VERSION_SYSTEM", "SemVer")
+	retries, err := strconv.Atoi(getEnvDefault("INPUT_RETRIES", "3"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	url := fmt.Sprintf(`https://api.anaconda.org/package/%s/%s/files`, orgName, pkgName)
 
@@ -61,8 +67,14 @@ func main() {
 	}
 
 	req.Header.Set("User-Agent", "gha-anaconda-package-version")
-
-	res, getErr := dhClient.Do(req)
+	var res *http.Response
+	getErr := error(nil)
+	for i := 1; i <= retries; i++ {
+		res, getErr = dhClient.Do(req)
+		if getErr == nil {
+			break
+		}
+	}
 	if getErr != nil {
 		log.Fatal(getErr)
 	}

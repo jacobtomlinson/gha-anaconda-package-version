@@ -15,6 +15,11 @@ inputs:
     description: The versioning system to use
     required: false
     default: "SemVer"
+  retries:
+    description: The number of times to retry the request
+    required: false
+    default: 3
+    type: number
 outputs:
   version:
     description: The latest version
